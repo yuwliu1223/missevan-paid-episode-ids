@@ -92,7 +92,7 @@ def fetch_all_uids_by_comments(sound_id):
 
 
 def get_user_input():
-    return input("Enter the drama ids (separate with commas, e.g, 62452,68690,72732,74464,74005,68204,74309): ")
+    return input("Enter the drama ids (separate with commas, e.g, 62452,68690,72732,74464,74005,68204,74309,52382): ")
 
 
 def process_sound(sound):
@@ -150,15 +150,19 @@ def process_drama_id(drama_id, sound_writer, drama_writer):
                         free_view_count += int(sound_detail['view_count'])
 
                     sound_data.append(sound_detail)
+                    print(sound_detail['sound_title'], sound_detail['create_time'], sound_detail['need_pay'],
+                          len(sound_detail['danmaku_uids']), len(sound_detail['comment_uids']),
+                          len(sound_detail['total_sound_uids']), sound_detail['view_count'])
+
 
     # Order sound_data by sound_id
     sound_data.sort(key=lambda x: x['sound_id'])
 
     for sound_detail in sound_data:
         sound_writer.writerow([
-            sound_detail['sound_title'], sound_detail['create_time'], sound_detail['need_pay'],
+            sound_detail['sound_title'], sound_detail['create_time'], ('PAID' if int(sound_detail['need_pay']) > 0 else 'FREE'),
             len(sound_detail['danmaku_uids']), len(sound_detail['comment_uids']),
-            len(sound_detail['total_sound_uids'])
+            len(sound_detail['total_sound_uids']), sound_detail['view_count']
         ])
 
     drama_writer.writerow([
@@ -180,7 +184,7 @@ def runner():
         sound_writer = csv.writer(sound_file)
         drama_writer = csv.writer(drama_file)
 
-        sound_writer.writerow(["声音标题", "创建时间", "是否需要付费", "弹幕用户ID", "评论用户ID", "总用户ID"])
+        sound_writer.writerow(["声音标题", "创建时间", "是否需要付费", "弹幕用户ID", "评论用户ID", "总用户ID", "观看次数"])
         drama_writer.writerow(
             ["剧集ID", "剧集名称", "首个声音创建时间", "价格", "总观看次数", "付费观看次数", "免费观看次数",
              "付费弹幕用户ID", "付费评论用户ID", "免费弹幕用户ID", "免费评论用户ID",
