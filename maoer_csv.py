@@ -3,7 +3,6 @@ import datetime
 import logging
 import time
 import xml.etree.ElementTree as ETree
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
 # Configure logging
@@ -117,70 +116,6 @@ def process_sound(sound):
     return sound_detail
 
 
-# def process_drama_id(drama_id, sound_writer, drama_writer):
-#     logging.info(f"Processing drama: (ID: {drama_id})")
-#     sound_lists, name, price, view_count, catalog_name = get_drama_sound_lists(drama_id)
-#     sound_data = []
-#     total_paid_udis = set()
-#     total_free_udis = set()
-#
-#     total_paid_danmaku_udis = set()
-#     total_paid_comment_uids = set()
-#     total_free_danmaku_udis = set()
-#     total_free_comment_uids = set()
-#
-#     paid_view_count = 0
-#     free_view_count = 0
-#     first_sound_create_time = None
-#
-#     if sound_lists:
-#         with ThreadPoolExecutor() as executor:
-#             future_to_sound = {executor.submit(process_sound, sound): sound for sound in sound_lists}
-#             for future in as_completed(future_to_sound):
-#                 sound_detail = future.result()
-#                 if first_sound_create_time is None or sound_detail['create_time'] < first_sound_create_time:
-#                     first_sound_create_time = sound_detail['create_time']
-#                 if sound_detail:
-#                     if future_to_sound[future].get('need_pay') > 0:
-#                         total_paid_udis.update(sound_detail['total_sound_uids'])
-#                         paid_view_count += int(sound_detail['view_count'])
-#
-#                         total_paid_danmaku_udis.update(sound_detail['danmaku_uids'])
-#                         total_paid_comment_uids.update(sound_detail['comment_uids'])
-#                     else:
-#                         total_free_udis.update(sound_detail['total_sound_uids'])
-#                         total_free_danmaku_udis.update(sound_detail['danmaku_uids'])
-#                         total_free_comment_uids.update(sound_detail['comment_uids'])
-#                         free_view_count += int(sound_detail['view_count'])
-#
-#                     sound_data.append(sound_detail)
-#                     print(sound_detail['sound_title'], sound_detail['create_time'], sound_detail['need_pay'],
-#                           len(sound_detail['danmaku_uids']), len(sound_detail['comment_uids']),
-#                           len(sound_detail['total_sound_uids']), sound_detail['view_count'])
-#
-#
-#     # Order sound_data by sound_id
-#     sound_data.sort(key=lambda x: x['sound_id'])
-#
-#     for sound_detail in sound_data:
-#         sound_writer.writerow([
-#             sound_detail['sound_title'], sound_detail['create_time'], ('PAID' if int(sound_detail['need_pay']) > 0 else 'FREE'),
-#             len(sound_detail['danmaku_uids']), len(sound_detail['comment_uids']),
-#             len(sound_detail['total_sound_uids']), sound_detail['view_count']
-#         ])
-#
-#     # Add two new rows after the sound data
-#     sound_writer.writerow(['End of data for drama ID', drama_id, '', '', '', '', ''])
-#     sound_writer.writerow(['', '', '', '', '', '', ''])
-#     sound_writer.writerow(['', '', '', '', '', '', ''])
-#
-#     drama_writer.writerow([
-#         drama_id, name, first_sound_create_time, price, view_count, paid_view_count, free_view_count,
-#         len(total_paid_danmaku_udis), len(total_paid_comment_uids), len(total_free_danmaku_udis),
-#         len(total_free_comment_uids), len(total_paid_udis), len(total_free_udis)
-#     ])
-#
-#     return sound_data, total_paid_udis
 def process_drama_id(drama_id, sound_writer, drama_writer):
     logging.info(f"Processing drama: (ID: {drama_id})")
     sound_lists, name, price, view_count, catalog_name = get_drama_sound_lists(drama_id)
@@ -200,12 +135,12 @@ def process_drama_id(drama_id, sound_writer, drama_writer):
     if sound_lists:
         for sound in sound_lists:
             sound_detail = process_sound(sound)
-            if first_sound_create_time is None or sound_detail['create_time'] < first_sound_create_time:
+            if sound_detail['create_time'] is not None and (first_sound_create_time is None or sound_detail['create_time'] < first_sound_create_time):
                 first_sound_create_time = sound_detail['create_time']
             if sound_detail:
                 if sound.get('need_pay') > 0:
                     total_paid_udis.update(sound_detail['total_sound_uids'])
-                    paid_view_count += int(sound_detail['view_count'])
+                    paid_view_count += (int(sound_detail['view_count']) if sound_detail['view_count'] is not None else 0)
 
                     total_paid_danmaku_udis.update(sound_detail['danmaku_uids'])
                     total_paid_comment_uids.update(sound_detail['comment_uids'])
@@ -213,7 +148,7 @@ def process_drama_id(drama_id, sound_writer, drama_writer):
                     total_free_udis.update(sound_detail['total_sound_uids'])
                     total_free_danmaku_udis.update(sound_detail['danmaku_uids'])
                     total_free_comment_uids.update(sound_detail['comment_uids'])
-                    free_view_count += int(sound_detail['view_count'])
+                    free_view_count += (int(sound_detail['view_count']) if sound_detail['view_count'] is not None else 0)
 
                 sound_data.append(sound_detail)
                 print(sound_detail['sound_title'], sound_detail['create_time'], sound_detail['need_pay'],
@@ -271,6 +206,8 @@ def runner():
             sound_data, total_paid_udis = process_drama_id(drama_id.strip(), sound_writer, drama_writer)
             drama_sound[drama_id] = sound_data
             all_paid_total_uids.update(total_paid_udis)
+
+            print("--------------------- Taking a break -------------------------")
             time.sleep(60)
 
     print('-------------------------------------------------')
