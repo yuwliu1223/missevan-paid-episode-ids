@@ -15,9 +15,14 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
     'Accept-Language': 'en-US,en;q=0.9'
 }
-SoundTianGuanXianMian = ['8321733', '8326714', '8331496', '8336360', '8341274']
-start_date = datetime.datetime(2023,8,24,18,0,0)
-end_date = datetime.datetime(2023,8,29,18,0,0)
+# SoundTianGuanXianMian = ['8321733', '8326714', '8331496', '8336360', '8341274']
+# SoundTianGuanXianMian = []
+# start_date = datetime.datetime(2023,8,24,18,0,0)
+# end_date = datetime.datetime(2023,8,29,18,0,0)
+
+SoundTianGuanXianMian = ['9648138']
+start_date = datetime.datetime(2024,6,26,18,0,0)
+end_date = datetime.datetime(2024,7,3,18,0,0)
 
 
 def measure_time(func):
@@ -158,7 +163,7 @@ def fetch_all_uids_by_comments(sound_id):
 
 
 def get_user_input():
-    return input("Enter the drama ids (separate with commas, e.g, 62452,68690,72732,74464,74005,68204,74309,52382): ")
+    return input("Enter the drama ids (separate with commas, e.g, 62452,68690,72732): ")
 
 
 def process_sound(sound):
@@ -238,11 +243,6 @@ def write_sound_data(drama_id, sound_data: List[Dict], sound_writer, previous_pa
             len(sound_detail['total_sound_uids']), sound_detail['view_count'],
             sound_detail['new_paid_uids']
         ])
-        print(sound_detail['sound_title'], sound_detail['create_time'],
-              'PAID' if int(sound_detail['need_pay']) > 0 else 'FREE',
-              len(sound_detail['danmaku_uids']), len(sound_detail['comment_uids']),
-              len(sound_detail['total_sound_uids']), sound_detail['view_count'],
-              sound_detail['new_paid_uids'])
 
     sound_writer.writerow(['End of data for drama ID', drama_id, '', '', '', '', '', ''])
     sound_writer.writerow(['', '', '', '', '', '', '', ''])
@@ -277,6 +277,10 @@ def process_drama_id(drama_id: str, sound_writer, drama_writer, previous_paid_ui
                 paid_view_count, free_view_count
             )
             sound_data.append(sound_detail)
+            print(sound_detail['sound_title'], sound_detail['create_time'],
+                  'PAID' if int(sound_detail['need_pay']) > 0 else 'FREE',
+                  len(sound_detail['danmaku_uids']), len(sound_detail['comment_uids']),
+                  len(sound_detail['total_sound_uids']), sound_detail['view_count'])
 
     new_paid_uids = total_paid_udis.difference(previous_paid_uids)
     paid_uids_growth = len(new_paid_uids)
