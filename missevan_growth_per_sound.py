@@ -108,7 +108,7 @@ def parse_danmakus(xml_data: bytes, sound_id: int) -> Set[int]:
 
 
 def should_skip_danmaku(attributes: list, sound_id: int) -> bool:
-    if SoundTianGuanXianMian and sound_id in SoundTianGuanXianMian:
+    if SoundTianGuanXianMian and str(sound_id) in SoundTianGuanXianMian:
         date_time = datetime.datetime.fromtimestamp(int(attributes[4]))
         return start_date <= date_time <= end_date
     return False
